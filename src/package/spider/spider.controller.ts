@@ -9,4 +9,9 @@ export class SpiderController {
   async beginTask() {
     return this.spiderService.spiderFundBasicInfo();
   }
+
+  @Get('/position')
+  async position() {
+    return this.spiderService.spiderPosition();
+  }
 }
