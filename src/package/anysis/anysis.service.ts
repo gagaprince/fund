@@ -8,6 +8,39 @@ export class AnysisService {
     private readonly dbService: DbService,
     private readonly proxyInterfaceService: ProxyInterfaceService
   ) {}
+
+  private anysisStock(positionDatas) {
+    const stockMap = new Map<String, any>();
+    positionDatas.forEach(({ stockList }) => {
+      const len = stockList.length;
+      stockList.forEach((stock, index) => {
+        if (index < 4) {
+          const stockCode = stock[0];
+          const rank = len - index;
+          let stockInMap = stockMap.get(stockCode);
+          if (stockInMap) {
+            stockInMap.rank += rank;
+          } else {
+            stockInMap = {
+              stock,
+              rank,
+            };
+            stockMap.set(stockCode, stockInMap);
+          }
+        }
+      });
+    });
+    const stockList = [];
+    stockMap.forEach((value) => {
+      stockList.push(value);
+    });
+    stockList.sort((stock1, stock2) => {
+      return stock2.rank - stock1.rank;
+    });
+
+    return stockList;
+  }
+
   async getHotStock() {
     // 获取排名前100 的基金
     const fundListRet = await this.proxyInterfaceService.proxyRank({
@@ -18,7 +51,7 @@ export class AnysisService {
       fundScale: 0,
       asc: 0,
       pageIndex: 1,
-      pageSize: 100,
+      pageSize: 300,
     });
     const fundList = fundListRet.data.rank;
     // 计算持仓排名
@@ -32,10 +65,9 @@ export class AnysisService {
       } catch (e) {
         console.log(stockList);
       }
-
       return positionData;
     });
 
-    return positionDatas;
+    return this.anysisStock(positionDatas);
   }
 }
